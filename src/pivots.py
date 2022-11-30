@@ -6,8 +6,7 @@ from typing import Union
 
 import pygame
 
-from utils import ColorPoint, Origin, Point, Vector
-
+from utils import ColorPoint, Origin, Point, Vector, draw_rect, rotate_point
 
 BLACK_CLR = (0, 0, 0)
 WHITE_CLR = (255, 255, 255)
@@ -49,36 +48,8 @@ def at_scale(natural_coords: Point) -> Point:
     return Point(natural_coords.x * SCREEN_SCALE, natural_coords.y * SCREEN_SCALE)
 
 
-def rotate_point(
-    o: Origin, p: Point
-) -> Point:
-    new_x = o.x + cos(o.theta_r) * p.x - sin(o.theta_r) * p.y
-    new_y = o.y + sin(o.theta_r) * p.x + cos(o.theta_r) * p.y
-    return Point(new_x, new_y)
-
-
-def draw_rect(
-    screen: pygame.Surface,
-    color: pygame.Color,
-    o: Origin,
-    p: Point,
-):
-    ll = Point(o.x, o.y)
-    lr = rotate_point(o, Point(p.x, 0))
-    ur = rotate_point(o, Point(p.x, p.y))
-    ul = rotate_point(o, Point(0, p.y))
-    print(ll, lr, ur, ul)
-    pygame.draw.line(screen, color, as_screen(ll), as_screen(lr))
-    pygame.draw.line(screen, color, as_screen(lr), as_screen(ur))
-    pygame.draw.line(screen, color, as_screen(ur), as_screen(ul))
-    pygame.draw.line(screen, color, as_screen(ul), as_screen(ll))
-
-
 def generate_search_grid(
-    o: Origin,
-    p: Point,
-    inc: Vector,
-    color: pygame.Color
+    o: Origin, p: Point, inc: Vector, color: pygame.Color
 ) -> list[list[ColorPoint]]:
     xs = list(range(0, p.x + inc.x, inc.x))
     ys = list(range(p.y, -inc.y, -inc.y))
@@ -112,8 +83,8 @@ def draw_background(screen: pygame.Surface, x1_grid: GRID, x2_grid: GRID):
         ),
     )
 
-    draw_rect(screen, SEARCH_CLR, L0, SEARCH_AREA)
-    draw_rect(screen, SEARCH_CLR, L1, SEARCH_AREA)
+    draw_rect(screen, SEARCH_CLR, L0, SEARCH_AREA, as_screen)
+    draw_rect(screen, SEARCH_CLR, L1, SEARCH_AREA, as_screen)
     for row in x1_grid:
         for point in row:
             pygame.draw.circle(screen, point.color, as_screen(point), 1)
