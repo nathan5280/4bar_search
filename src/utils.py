@@ -38,6 +38,10 @@ class ColorPoint(list):
     def color(self):
         return self[2]
 
+    @color.setter
+    def color(self, color):
+        self[2] = color
+
 
 class Origin(list):
     def __init__(self, x_: float, y_: float, theta_: float):

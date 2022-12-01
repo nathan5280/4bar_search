@@ -11,9 +11,9 @@ from utils import ColorPoint, Origin, Point, Vector, draw_rect, rotate_point
 BLACK_CLR = (0, 0, 0)
 WHITE_CLR = (255, 255, 255)
 SEARCH_CLR = (0, 200, 200)
-ACTIVE_CLR = (0, 0, 255)
-INACTIVE_CLR = (255, 0, 0)
-UNKNOWN_CLR = (50, 50, 50)
+ACTIVE_CLR = (0, 255, 0)
+INACTIVE_CLR = (50, 50, 50)
+UNKNOWN_CLR = (175, 0, 175)
 
 SCREEN_SCALE = 5
 WORK_AREA = Point(200, 123)
@@ -26,7 +26,7 @@ FLOOR_CLEARENCE = 5
 
 L0 = Origin(5, CEILING, 0)
 
-t1 = -90
+t1 = -80
 r1 = t1 * 2 * pi / 360
 L1 = Origin(
     SEARCH_AREA.x,
@@ -64,7 +64,7 @@ def generate_search_grid(
     return coords
 
 
-def draw_background(screen: pygame.Surface, grid_1: GRID, grid_2: GRID):
+def draw_background(screen: pygame.Surface, grid_0: GRID, grid_1: GRID):
     screen.fill(WHITE_CLR)
     pygame.draw.rect(
         screen,
@@ -85,23 +85,28 @@ def draw_background(screen: pygame.Surface, grid_1: GRID, grid_2: GRID):
 
     draw_rect(screen, SEARCH_CLR, L0, SEARCH_AREA, as_screen)
     draw_rect(screen, SEARCH_CLR, L1, SEARCH_AREA, as_screen)
+    for row in grid_0:
+        for point in row:
+            pygame.draw.circle(screen, point.color, as_screen(point), 1)
     for row in grid_1:
         for point in row:
             pygame.draw.circle(screen, point.color, as_screen(point), 1)
-    for row in grid_2:
-        for point in row:
-            pygame.draw.circle(screen, point.color, as_screen(point), 1)
-    return grid_1, grid_2
+    return grid_0, grid_1
 
 
-def draw_construction(screen: pygame.Surface, color: pygame.Color, l0: Point, l1: Point) -> tuple[Point, Point]:
-    lx1, lx2 = as_screen(l0), as_screen(l1)
-    pygame.draw.line(screen, color, lx1, lx2)
+def draw_construction(screen: pygame.Surface, color: pygame.Color, l0: Point, l1: Point):
+    lx0, lx1 = as_screen(l0), as_screen(l1)
+    pygame.draw.line(screen, color, lx0, lx1)
+
+    mid = Origin(lx0.x + (lx1.x - lx0.x)/2, lx0.y + (lx1.y - lx0.y)/2, 90)
+    lr0 = rotate_point(mid, Point(lx0.x - mid.x, lx0.y - mid.y))
+    lr1 = rotate_point(mid, Point(lx1.x - mid.x, lx1.y - mid.y))
+    pygame.draw.line(screen, color, lr0, lr1)
 
 def run(screen: pygame.Surface):
-    grid_1 = generate_search_grid(L0, SEARCH_AREA, SEARCH_INC, UNKNOWN_CLR)
-    grid_2 = generate_search_grid(L1, SEARCH_AREA, SEARCH_INC, UNKNOWN_CLR)
-    draw_background(screen, grid_1, grid_2)
+    grid_0 = generate_search_grid(L0, SEARCH_AREA, SEARCH_INC, UNKNOWN_CLR)
+    grid_1 = generate_search_grid(L1, SEARCH_AREA, SEARCH_INC, UNKNOWN_CLR)
+    draw_background(screen, grid_0, grid_1)
     x_idx, y_idx = 0, 0
     running = True
     while running:
@@ -112,24 +117,33 @@ def run(screen: pygame.Surface):
                 case pygame.QUIT:
                     running = False
                 case pygame.KEYDOWN:
+                    new_color = None
                     match event.key:
                         case pygame.K_LEFT:
                             x_idx -= 1
                             if x_idx < 0:
-                                x_idx = len(grid_1[0]) - 1
+                                x_idx = len(grid_0[0]) - 1
                         case pygame.K_RIGHT:
                             x_idx += 1
-                            if x_idx == len(grid_1[0]):
+                            if x_idx == len(grid_0[0]):
                                 x_idx = 0
                         case pygame.K_UP:
                             y_idx -= 1
                             if y_idx < 0:
-                                y_idx = len(grid_1) - 1
+                                y_idx = len(grid_0) - 1
                         case pygame.K_DOWN:
                             y_idx += 1
-                            if y_idx == len(grid_1):
+                            if y_idx == len(grid_0):
                                 y_idx = 0
-                    draw_construction(screen, UNKNOWN_CLR, grid_1[y_idx][x_idx], grid_2[y_idx][x_idx])
+                        case pygame.K_q:
+                            running = False
+                        case pygame.K_k:
+                            new_color = ACTIVE_CLR
+                        case pygame.K_x:
+                            new_color = INACTIVE_CLR
+                    new_color = new_color or grid_0[y_idx][x_idx].color
+                    draw_construction(screen, new_color, grid_0[y_idx][x_idx], grid_1[y_idx][x_idx])
+                    grid_0[y_idx][x_idx].color = grid_1[y_idx][x_idx].color = new_color
         # return
 
 
