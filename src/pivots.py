@@ -64,7 +64,7 @@ def generate_search_grid(
     return coords
 
 
-def draw_background(screen: pygame.Surface, x1_grid: GRID, x2_grid: GRID):
+def draw_background(screen: pygame.Surface, grid_1: GRID, grid_2: GRID):
     screen.fill(WHITE_CLR)
     pygame.draw.rect(
         screen,
@@ -85,19 +85,23 @@ def draw_background(screen: pygame.Surface, x1_grid: GRID, x2_grid: GRID):
 
     draw_rect(screen, SEARCH_CLR, L0, SEARCH_AREA, as_screen)
     draw_rect(screen, SEARCH_CLR, L1, SEARCH_AREA, as_screen)
-    for row in x1_grid:
+    for row in grid_1:
         for point in row:
             pygame.draw.circle(screen, point.color, as_screen(point), 1)
-    for row in x2_grid:
+    for row in grid_2:
         for point in row:
             pygame.draw.circle(screen, point.color, as_screen(point), 1)
-    return x1_grid, x2_grid
+    return grid_1, grid_2
 
+
+def draw_construction(screen: pygame.Surface, color: pygame.Color, l0: Point, l1: Point) -> tuple[Point, Point]:
+    lx1, lx2 = as_screen(l0), as_screen(l1)
+    pygame.draw.line(screen, color, lx1, lx2)
 
 def run(screen: pygame.Surface):
-    x1_grid = generate_search_grid(L0, SEARCH_AREA, SEARCH_INC, UNKNOWN_CLR)
-    x2_grid = generate_search_grid(L1, SEARCH_AREA, SEARCH_INC, UNKNOWN_CLR)
-    draw_background(screen, x1_grid, x2_grid)
+    grid_1 = generate_search_grid(L0, SEARCH_AREA, SEARCH_INC, UNKNOWN_CLR)
+    grid_2 = generate_search_grid(L1, SEARCH_AREA, SEARCH_INC, UNKNOWN_CLR)
+    draw_background(screen, grid_1, grid_2)
     x_idx, y_idx = 0, 0
     running = True
     while running:
@@ -107,6 +111,25 @@ def run(screen: pygame.Surface):
             match event.type:
                 case pygame.QUIT:
                     running = False
+                case pygame.KEYDOWN:
+                    match event.key:
+                        case pygame.K_LEFT:
+                            x_idx -= 1
+                            if x_idx < 0:
+                                x_idx = len(grid_1[0]) - 1
+                        case pygame.K_RIGHT:
+                            x_idx += 1
+                            if x_idx == len(grid_1[0]):
+                                x_idx = 0
+                        case pygame.K_UP:
+                            y_idx -= 1
+                            if y_idx < 0:
+                                y_idx = len(grid_1) - 1
+                        case pygame.K_DOWN:
+                            y_idx += 1
+                            if y_idx == len(grid_1):
+                                y_idx = 0
+                    draw_construction(screen, UNKNOWN_CLR, grid_1[y_idx][x_idx], grid_2[y_idx][x_idx])
         # return
 
 
